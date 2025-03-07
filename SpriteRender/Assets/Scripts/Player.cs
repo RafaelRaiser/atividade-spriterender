@@ -7,6 +7,7 @@ public class Player : MonoBehaviour
     [SerializeField] private float speed = 3f;
     [SerializeField] private Rigidbody2D rb;
 
+    public float health = 100f;
     private Vector2 movement;
 
     private void Update()
