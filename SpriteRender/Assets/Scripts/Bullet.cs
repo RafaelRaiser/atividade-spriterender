@@ -8,7 +8,7 @@ public class Bullet : MonoBehaviour
     [SerializeField] private Rigidbody2D rb;
     [SerializeField] public float damage = 10f;
 
-    private Transform target;
+    private Player player;
 
     private void Start()
     {
@@ -27,33 +27,16 @@ public class Bullet : MonoBehaviour
             collider = gameObject.AddComponent<BoxCollider2D>();
         }
         collider.isTrigger = true;
-
-        // Encontrar o inimigo mais próximo
-        target = FindClosestEnemy();
-        if (target != null)
-        {
-            Vector2 direction = (target.position - transform.position).normalized;
-            rb.velocity = direction * bulletSpeed;
-        }
     }
 
-    private Transform FindClosestEnemy()
+    public void SetDirection(Vector2 direction)
     {
-        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
-        Transform closestEnemy = null;
-        float shortestDistance = Mathf.Infinity;
+        rb.velocity = direction * bulletSpeed;
+    }
 
-        foreach (GameObject enemy in enemies)
-        {
-            float distance = Vector2.Distance(transform.position, enemy.transform.position);
-            if (distance < shortestDistance)
-            {
-                shortestDistance = distance;
-                closestEnemy = enemy.transform;
-            }
-        }
-
-        return closestEnemy;
+    public void SetPlayer(Player player)
+    {
+        this.player = player;
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
@@ -61,8 +44,24 @@ public class Bullet : MonoBehaviour
         if (collision.CompareTag("Enemy"))
         {
             // Lógica para aplicar dano ao inimigo
-            collision.GetComponent<Enemy>().TakeDamage(damage);
-            Destroy(gameObject);
+            Enemy enemy = collision.GetComponent<Enemy>();
+            enemy.TakeDamage(damage);
+            enemy.TriggerDamageAnimation();
+            DestroyBullet();
         }
+        else if (collision.CompareTag("Colisores"))
+        {
+            // Destruir a bala ao colidir com objetos com a tag "Colisores"
+            DestroyBullet();
+        }
+    }
+
+    private void DestroyBullet()
+    {
+        if (player != null)
+        {
+            player.ResetShootAnimation();
+        }
+        Destroy(gameObject);
     }
 }

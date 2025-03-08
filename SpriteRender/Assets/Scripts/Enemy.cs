@@ -8,11 +8,15 @@ public class Enemy : MonoBehaviour
     public float speed = 2f;
     private Transform player;
     private Rigidbody2D rb;
+    private Animator animator;
+    private SpriteRenderer spriteRenderer;
 
     private void Start()
     {
         player = GameObject.FindGameObjectWithTag("Player").transform;
         rb = GetComponent<Rigidbody2D>();
+        animator = GetComponent<Animator>();
+        spriteRenderer = GetComponent<SpriteRenderer>();
 
         // Configurar o Rigidbody2D
         if (rb == null)
@@ -39,11 +43,11 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    private void OnTriggerEnter2D(Collider2D collision)
+    private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.CompareTag("Bullet"))
+        if (collision.collider.CompareTag("Player"))
         {
-            TakeDamage(collision.GetComponent<Bullet>().damage);
+            collision.collider.GetComponent<Player>().TakeDamage(10f); // Ajuste o valor do dano conforme necessário
         }
     }
 
@@ -55,5 +59,20 @@ public class Enemy : MonoBehaviour
             player.GetComponent<Player>().AddKill();
             Destroy(gameObject);
         }
+    }
+
+    public void TriggerDamageAnimation()
+    {
+        if (animator != null)
+        {
+            StartCoroutine(DamageAnimationCoroutine());
+        }
+    }
+
+    private IEnumerator DamageAnimationCoroutine()
+    {
+        animator.SetBool("IsDano", true);
+        yield return new WaitForSeconds(0.1f); // Ajuste o tempo conforme necessário
+        animator.SetBool("IsDano", false);
     }
 }

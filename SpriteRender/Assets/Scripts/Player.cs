@@ -8,6 +8,7 @@ public class Player : MonoBehaviour
     [SerializeField] private Rigidbody2D rb;
     [SerializeField] private GameObject bulletPrefab;
     [SerializeField] private Transform bulletPoint;
+    [SerializeField] private Animator animator;
 
     public float health = 100f;
     private Vector2 movement;
@@ -41,6 +42,9 @@ public class Player : MonoBehaviour
         float moveY = Input.GetAxis("Vertical");
         movement = new Vector2(moveX, moveY).normalized;
 
+        // Rotacionar o arco para seguir o cursor do mouse
+        RotateTowardsMouse();
+
         // Dispara a bala
         if (Input.GetButtonDown("Fire1"))
         {
@@ -56,7 +60,30 @@ public class Player : MonoBehaviour
 
     private void Shoot()
     {
-        Instantiate(bulletPrefab, bulletPoint.position, bulletPoint.rotation);
+        // Iniciar a animação de tiro
+        if (animator != null)
+        {
+            animator.SetBool("Shoot", true);
+        }
+
+        // Instanciar a bala
+        GameObject bullet = Instantiate(bulletPrefab, bulletPoint.position, bulletPoint.rotation);
+        Bullet bulletScript = bullet.GetComponent<Bullet>();
+
+        // Definir a direção da bala como a direção do bulletPoint
+        Vector2 direction = bulletPoint.right;
+        bulletScript.SetDirection(direction);
+
+        // Passar a referência do Player para a bala
+        bulletScript.SetPlayer(this);
+    }
+
+    private void RotateTowardsMouse()
+    {
+        Vector2 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        Vector2 direction = (mousePosition - (Vector2)bulletPoint.position).normalized;
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        bulletPoint.rotation = Quaternion.Euler(new Vector3(0, 0, angle));
     }
 
     public void TakeDamage(float damage)
@@ -81,11 +108,19 @@ public class Player : MonoBehaviour
         UIManager.Instance.UpdateKillCount(killCount);
     }
 
-    private void OnTriggerEnter2D(Collider2D collision)
+    private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.CompareTag("Enemy"))
+        if (collision.collider.CompareTag("Enemy"))
         {
             TakeDamage(10f); // Ajuste o valor do dano conforme necessário
+        }
+    }
+
+    public void ResetShootAnimation()
+    {
+        if (animator != null)
+        {
+            animator.SetBool("Shoot", false);
         }
     }
 }
